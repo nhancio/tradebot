@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TradeBot – Zerodha</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="layout">
+    <header class="header">
+      <h1>TradeBot</h1>
+      <p class="tagline">Zerodha Kite Connect</p>
+      <div class="auth-status" id="authStatus">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Checking…</span>
+        <a id="loginLink" class="link" href="#" target="_blank" rel="noopener" style="display: none;">Get login URL</a>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="card">
+        <h2>Data</h2>
+        <p class="hint">Fetch from Zerodha (requires KITE_ACCESS_TOKEN in .env)</p>
+        <div class="button-row">
+          <button type="button" class="btn btn-secondary" data-fetch="orders">Orders</button>
+          <button type="button" class="btn btn-secondary" data-fetch="positions">Positions</button>
+          <button type="button" class="btn btn-secondary" data-fetch="margins">Margins</button>
+          <button type="button" class="btn btn-secondary" data-fetch="profile">Profile</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Place order – Equity</h2>
+        <p class="hint">NSE/BSE stocks. CNC = delivery, MIS = intraday.</p>
+        <form class="form form-inline" id="formEquity">
+          <input type="text" name="symbol" placeholder="Symbol" required value="RELIANCE" />
+          <select name="side">
+            <option value="BUY">BUY</option>
+            <option value="SELL">SELL</option>
+          </select>
+          <input type="number" name="quantity" placeholder="Qty" min="1" required value="1" />
+          <select name="product">
+            <option value="CNC">CNC</option>
+            <option value="MIS">MIS</option>
+          </select>
+          <button type="submit" class="btn btn-primary">Place equity order</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Place order – Futures</h2>
+        <p class="hint">NFO futures. Use exact tradingsymbol (e.g. NIFTY24FEBFUT).</p>
+        <form class="form form-inline" id="formFutures">
+          <input type="text" name="symbol" placeholder="Futures symbol" required />
+          <select name="side">
+            <option value="BUY">BUY</option>
+            <option value="SELL">SELL</option>
+          </select>
+          <input type="number" name="quantity" placeholder="Lots" min="1" required value="1" />
+          <select name="product">
+            <option value="NRML">NRML</option>
+            <option value="MIS">MIS</option>
+          </select>
+          <button type="submit" class="btn btn-primary">Place futures order</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Place order – Options</h2>
+        <p class="hint">NFO options. Use exact tradingsymbol (e.g. NIFTY24FEB24500CE).</p>
+        <form class="form form-inline" id="formOptions">
+          <input type="text" name="symbol" placeholder="Option symbol" required />
+          <select name="side">
+            <option value="BUY">BUY</option>
+            <option value="SELL">SELL</option>
+          </select>
+          <input type="number" name="quantity" placeholder="Lots" min="1" required value="1" />
+          <select name="product">
+            <option value="NRML">NRML</option>
+            <option value="MIS">MIS</option>
+          </select>
+          <button type="submit" class="btn btn-primary">Place options order</button>
+        </form>
+      </section>
+
+      <section class="card result-card">
+        <h2>Result</h2>
+        <div class="result-actions" id="resultActions">
+          <button type="button" class="btn btn-ghost" id="copyResult">Copy</button>
+          <button type="button" class="btn btn-ghost" id="clearResult">Clear</button>
+        </div>
+        <pre class="result" id="result"><em>Click a data button or place an order to see response.</em></pre>
+      </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

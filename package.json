@@ -1,0 +1,24 @@
+{
+  "name": "tradebot",
+  "version": "0.1.0",
+  "description": "AI-based trading bot using Zerodha Kite Connect",
+  "type": "module",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "ui": "node src/server.js",
+    "login": "node src/scripts/login.js",
+    "orders": "node src/app.js orders",
+    "positions": "node src/app.js positions"
+  },
+  "keywords": ["zerodha", "kite", "trading", "bot"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.21.0",
+    "kiteconnect": "^4.1.0"
+  }
+}
