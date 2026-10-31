@@ -32,10 +32,9 @@ ensure_github_account() {
     echo "Authenticate that account first, then rerun this deploy." >&2
     return 1
   }
-  gh auth switch --hostname github.com --user "$GITHUB_ACCOUNT" >/dev/null || {
-    echo "Could not switch GitHub CLI to $GITHUB_ACCOUNT." >&2
-    return 1
-  }
+  # Push as $GITHUB_ACCOUNT through git-credential-ghuser (see ~/.gitconfig-<company>)
+  # instead of switching gh's active account for every other terminal and repo.
+  export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=credential.https://github.com.username GIT_CONFIG_VALUE_0="$GITHUB_ACCOUNT"
   echo "Using GitHub account: $GITHUB_ACCOUNT"
 }
 
@@ -88,6 +87,13 @@ _sync_check_staged() {
   return 1
 }
 
+# Each app keeps its videos and marketing files in content/, which never goes into git.
+_sync_ignore_content() {
+  grep -qxF '/content/' .gitignore 2>/dev/null \
+    || printf '\n# Videos and marketing content live here; never committed.\n/content/\n' >> .gitignore
+  [ -z "$(git ls-files content)" ] || git rm -r -q --cached content
+}
+
 _sync_merge() {
   case "$1" in refs/heads/main|refs/remotes/origin/HEAD|*/gh-pages) return 0 ;; esac
   git merge-base --is-ancestor "$1" HEAD 2>/dev/null && return 0
@@ -125,6 +131,7 @@ sync_branches_into_main() {
   start="$(git symbolic-ref -q --short HEAD || git rev-parse --short HEAD)"
 
   echo "==> 1/3 Commit pending changes on $start"
+  _sync_ignore_content || return 1
   git add -A || return 1
   _sync_check_staged || return 1
   git diff --cached --quiet || git commit -q -m "chore: commit pending changes before deploy" || return 1
@@ -132,7 +139,11 @@ sync_branches_into_main() {
 
   echo "==> 2/3 Merge local and GitHub branches into main"
   _sync_git fetch -q --prune origin || { echo "Deploy stopped: could not fetch from origin." >&2; return 1; }
-  git checkout -q main 2>/dev/null || git checkout -q -b main || return 1
+  if git show-ref --verify --quiet refs/heads/main || git show-ref --verify --quiet refs/remotes/origin/main; then
+    git checkout -q main || { echo "Deploy stopped: could not switch to main (git's reason is above)." >&2; return 1; }
+  else
+    git checkout -q -b main || return 1
+  fi
   for ref in "$start_ref" $(git for-each-ref --format='%(refname)' refs/heads refs/remotes/origin); do
     _sync_merge "$ref" || { echo "You were on $start; you are now on main." >&2; return 1; }
   done
@@ -154,7 +165,15 @@ sync_branches_into_main() {
     exec bash ./deploy.sh "$@"
   fi
 }
+# A fresh checkout has no node_modules; install the locked dependencies before building.
+_ensure_node_deps() {
+  [ -f package.json ] && [ ! -d node_modules ] || return 0
+  echo "==> Installing npm dependencies (node_modules is missing)"
+  if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi \
+    || { echo "Deploy stopped: npm could not install dependencies." >&2; return 1; }
+}
 sync_branches_into_main "$@" || exit 1
+_ensure_node_deps || exit 1
 
 
 REMOTE_NAME="origin"

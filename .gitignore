@@ -61,3 +61,6 @@ docs/package.json
 .pytest_trading_platform/
 .firebase/
 
+
+# Videos and marketing content live here; never committed.
+/content/
